@@ -71,6 +71,8 @@ public struct Config: Sendable, Codable, Equatable {
     public var menuBar: Bool = true
     /// Which readings, one to three, in the fixed order of `MenuBarMetric`.
     public var menuBarShows: [MenuBarMetric] = [.cpu]
+    /// Start in the menu bar without opening the panel.
+    public var startHidden: Bool = false
     /// The pointer near the panel's edge shows the resize cursor, and a press there resizes.
     public var resizeEdges: Bool = true
     /// New releases: install them, only offer them, or never look.
@@ -97,6 +99,7 @@ public struct Config: Sendable, Codable, Equatable {
         } else {
             menuBarShows = try container.decodeIfPresent(MenuBarMetric.self, forKey: .menuBarShows).map { [$0] } ?? defaults.menuBarShows
         }
+        startHidden = try container.decodeIfPresent(Bool.self, forKey: .startHidden) ?? defaults.startHidden
         resizeEdges = try container.decodeIfPresent(Bool.self, forKey: .resizeEdges) ?? defaults.resizeEdges
         updates = try container.decodeIfPresent(UpdateMode.self, forKey: .updates) ?? defaults.updates
         normalize()
@@ -112,6 +115,11 @@ public struct Config: Sendable, Codable, Equatable {
         hidden = ModuleID.added.filter(hidden.contains)
         menuBarShows = Array(MenuBarMetric.allCases.filter(menuBarShows.contains).prefix(Self.menuBarMost))
         if menuBarShows.isEmpty { menuBarShows = [.cpu] }
+    }
+
+    /// Leave the panel hidden on launch; requires `menuBar` unless relaunching from an update.
+    public func hidesPanelAtLaunch(relaunchHidden: Bool? = nil) -> Bool {
+        relaunchHidden ?? (startHidden && menuBar)
     }
 
     /// Most readings the menu bar shows at once.
@@ -202,6 +210,9 @@ public struct Config: Sendable, Codable, Equatable {
           // Which readings, one to three: "cpu", "memory", "swap", "gpu", "download",
           // "upload", "power". They do not have to be ones the panel shows.
           menuBarShows: ["cpu"],
+
+          // Start in the menu bar with the panel hidden (requires menuBar: true).
+          startHidden: false,
 
           // Near the panel's edges and corners the pointer turns into the resize cursor,
           // and a press there resizes the panel.

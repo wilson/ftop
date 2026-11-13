@@ -62,10 +62,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         watchConfig()
         updateMotion()
         model.render()
-        // An update that restarted a hidden panel leaves it hidden.
-        if UserDefaults.standard.bool(forKey: Self.startHiddenKey) {
-            UserDefaults.standard.removeObject(forKey: Self.startHiddenKey)
-        } else {
+        // An update keeps the panel shown or hidden as it was; a fresh launch follows the setting.
+        let relaunchHidden = UserDefaults.standard.object(forKey: Self.startHiddenKey) as? Bool
+        if relaunchHidden != nil { UserDefaults.standard.removeObject(forKey: Self.startHiddenKey) }
+        if !model.config.hidesPanelAtLaunch(relaunchHidden: relaunchHidden) {
             panel.orderFrontRegardless()
         }
         placeHalo()
@@ -82,8 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.control.refresh(self.controlState)
         }
         updater.willRelaunch = { [weak self] in
-            guard let self, !self.panel.isVisible else { return }
-            UserDefaults.standard.set(true, forKey: Self.startHiddenKey)
+            guard let self else { return }
+            UserDefaults.standard.set(!self.panel.isVisible, forKey: Self.startHiddenKey)
         }
         // Not during launch; then whenever a day has passed, looked at once an hour.
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in

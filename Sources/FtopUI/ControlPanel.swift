@@ -255,7 +255,7 @@ final class ControlFace: NSView {
 
     private enum Item: Hashable {
         case module(ModuleID), floating, menuBar, motion, panel, quit, palette(PaletteID), resizeEdges, more
-        case shows, interval, rows, language, updates, login, file
+        case shows, interval, rows, language, updates, login, startHidden, file
         case process, end, forceEnd
     }
 
@@ -328,7 +328,7 @@ final class ControlFace: NSView {
         ]
     }
 
-    private static let listed: [Item] = [.shows, .interval, .rows, .language, .updates, .login, .file]
+    private static let listed: [Item] = [.shows, .interval, .rows, .language, .updates, .login, .startHidden, .file]
     /// Above the switches when the block was opened on a process row.
     private static let processRows: [Item] = [.process, .end, .forceEnd]
 
@@ -408,6 +408,7 @@ final class ControlFace: NSView {
         case .language: Strings.pick("Language", "语言")
         case .updates: Strings.pick("Updates", "更新")
         case .login: Strings.pick("Open at login", "登录时打开")
+        case .startHidden: Strings.pick("Start hidden", "启动时隐藏")
         case .file: Strings.pick("Open settings file", "打开设置文件")
         case .process: process?.name ?? ""
         case .end: Strings.pick("End", "结束")
@@ -462,6 +463,7 @@ final class ControlFace: NSView {
         case .language: Self.name(of: config.language) + "  ›"
         case .updates: updatesValue + "  ›"
         case .login: loginValue
+        case .startHidden: config.startHidden ? Strings.pick("On", "开") : Strings.pick("Off", "关")
         case .file: "↗"
         case .process: process.map { "PID \($0.pid)" } ?? ""
         case .end: process?.refusal ?? ""
@@ -484,8 +486,8 @@ final class ControlFace: NSView {
     /// True for a row that cannot be used now; it is dimmed and a click does nothing.
     private func idle(_ item: Item) -> Bool {
         switch item {
-        // What the menu bar shows has no effect while the menu bar item is off.
-        case .shows: !config.menuBar
+        // Menu bar options have no effect while the menu bar item is off.
+        case .shows, .startHidden: !config.menuBar
         case .login: state.loginItem == .notInstalled || state.loginItem == .unknown
         // A process that may not be ended offers no action.
         case .end, .forceEnd: !processActionable
@@ -832,6 +834,11 @@ final class ControlFace: NSView {
             onResize?()
         case .file: onAction?(.openFile)
         case .login: if !idle(item) { onAction?(.loginItem) }
+        case .startHidden:
+            guard !idle(item) else { return }
+            state.config.startHidden.toggle()
+            build()
+            onChange?(config, "startHidden", config.startHidden ? "true" : "false")
         case .shows: if !idle(item) { choose(item) }
         case .interval, .rows, .language, .updates: choose(item)
         case .process: return

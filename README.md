@@ -180,6 +180,9 @@ Applications (`/Applications` or `~/Applications`); elsewhere the row says to mo
 there first. If macOS asks you to allow it, the row says *Needs approval* and a click
 opens Login Items in System Settings.
 
+Turn on **More → Start hidden** (`startHidden: true` in `config.json5`) to start in the
+menu bar without opening the panel.
+
 ### System processes
 
 Without extra rights macOS only lets ftop see your own processes. To include system

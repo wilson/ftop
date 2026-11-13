@@ -237,6 +237,7 @@ private let demoFrameCount = ProcessInfo.processInfo.environment["FTOP_DEMO_FRAM
             // The open block with the widest three menu bar readings, and the resize switch off.
             var three = state
             three.config.menuBarShows = [.memory, .download, .upload]
+            three.config.startHidden = true
             three.config.resizeEdges = false
             // "Open at login" in the states that change its text.
             var approval = state

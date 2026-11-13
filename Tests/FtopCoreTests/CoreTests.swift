@@ -149,6 +149,24 @@ import Testing
         #expect(try !Config.decode(Data("{ resizeEdges: false }".utf8)).resizeEdges)
     }
 
+    @Test func startHiddenSetting() throws {
+        let defaults = try Config.decode(Data("{}".utf8))
+        #expect(!defaults.startHidden)
+        #expect(!defaults.hidesPanelAtLaunch())
+        #expect(defaults.hidesPanelAtLaunch(relaunchHidden: true))
+
+        let hidden = try Config.decode(Data("{ startHidden: true }".utf8))
+        #expect(hidden.startHidden)
+        #expect(hidden.hidesPanelAtLaunch())
+        #expect(!hidden.hidesPanelAtLaunch(relaunchHidden: false))
+
+        let withoutMenuBar = try Config.decode(Data("{ startHidden: true, menuBar: false }".utf8))
+        #expect(withoutMenuBar.startHidden)
+        #expect(!withoutMenuBar.hidesPanelAtLaunch())
+
+        #expect(throws: (any Error).self) { try Config.decode(Data(#"{ startHidden: "yes" }"#.utf8)) }
+    }
+
     @Test func emptyFileGivesDefaults() throws {
         #expect(try Config.decode(Data("{}".utf8)) == Config())
     }
